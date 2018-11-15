@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Календарь 2</title>
+    <style>
+      #calendar{
+        display: inline-block;
+      }
+      #calendar td, #calendar th{
+        padding: 10px;
+        border: 1px solid red;
+        text-align: center;
+        cursor: pointer;
+      }
+      #calendar .nav, #calendar .info{
+        text-align: center;
+      }
+      #calendar a{
+        color: blue;
+        font-size: 25px;
+        text-decoration: none;
+      }
+      #calendar a:hover{
+        color: red;
+      }
+      #calendar .active{
+        color:green;
+      }
+
+      .display {
+        width: 500px;
+        height: 500px;
+        border: 1px solid red;
+      }
+
+      .addTask {
+        display: block;
+        margin:  10px;
+        position: relative;
+        left: 100px;
+        width: 300px;
+        height: 20px;
+      }
+      .field {
+        position: relative;
+        left: 100px;
+      }
+
+      .activeted {
+        text-decoration: line-through;
+        color: gray;
+      }
+      .complete {
+        display: none;
+      }
+      .time {
+        position: relative;
+        left: 150px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id = "calendar">
+      <div class = "info">Январь 2018</div>
+      <table>
+          <thead>
+            <tr>
+              <th>Пн</th>
+              <th>Вт</th>
+              <th>Ср</th>
+              <th>Чт</th>
+              <th>Пт</th>
+              <th>Сб</th>
+              <th>Вс</th>
+            </tr>
+          </thead>
+          <tbody class = "dates">
+          </tbody>
+        </table>
+        <div class = "nav">
+          <a href = "#" class = "prev">&larr;</a>
+          <a href = "#" class = "next">&rarr;</a>
+        </div>
+      </div>
+      <div class = "display">
+        <span class = 'time'>0.0.0</span>
+        <input  class = "addTask" type="text" placeholder="Введите текущую задачу на день">
+        <table  class = "field"></table>
+      </div>
+
+    <script type="text/javascript">
+
+    //localStorage.clear();
+
+      (function(selector) {
+
+        initCalendar(document.querySelector(selector));
+
+      function initCalendar(calendar) {
+        var date = new Date();
+        var showedYear = date.getFullYear();
+        var showedMonth = date.getMonth();
+
+        var currentMoment = {
+          year: showedYear,
+          month: showedMonth,
+          date: date.getDate()
+        };
+
+        var display = document.querySelector('.display');
+        var inputTask = document.querySelector('.addTask');
+        var table = document.querySelector('.field');
+        var span = document.querySelector('.time');
+
+        var dates = calendar.querySelector('.dates');
+        var info = calendar.querySelector('.info');
+
+        drawCalendar(showedYear, showedMonth, currentMoment, calendar, display, inputTask, table, span);
+
+        var prev = calendar.querySelector('.prev');
+        var next = calendar.querySelector('.next');
+
+        prev.addEventListener('click', function() {
+          showedYear = getPrevYear(showedYear, showedMonth);
+          showedMonth = getPrevMonth(showedMonth);
+
+        drawCalendar(showedYear, showedMonth, currentMoment, calendar, display, inputTask, table, span);
+      });
+
+        next.addEventListener('click', function() {
+          showedYear = getNextYear(showedYear, showedMonth);
+          showedMonth = getNextMonth(showedMonth);
+
+        drawCalendar(showedYear, showedMonth, currentMoment, calendar, display, inputTask, table, span);
+      });
+
+        function drawCalendar(showedYear, showedMonth, currentMoment, calendar, display, inputTask, table, span) {
+          drawDates(showedYear, showedMonth, dates, display, inputTask, table, span);
+          showInfo(showedYear, showedMonth, info);
+          showCurrentDate(showedYear, showedMonth, currentMoment, dates);
+        }
+      }
+
+      function showCurrentDate(showedYear, showedMonth, currentMoment, dates) {
+          if (showedYear == currentMoment['year'] &&
+              showedMonth == currentMoment['month']) {
+
+                var tds = dates.querySelectorAll('td');
+                for (var i = 0; i < tds.length; i++) {
+                  if (tds[i].innerHTML == currentMoment['date']){
+                    tds[i].classList.add('active');
+                    break;
+                  }
+                }
+
+
+              }
+      }
+
+      function getPrevYear(year, month) {
+          if (month == 0) {
+            return year - 1;
+          }else {
+            return year;
+          }
+      }
+
+      function getPrevMonth(month) {
+        if (month == 0) {
+          return 11;
+        }else {
+          return month - 1;
+        }
+      }
+
+
+      function getNextYear(year, month) {
+          if (month == 11) {
+            return year + 1;
+          }else {
+            return year;
+          }
+      }
+
+      function getNextMonth(month) {
+        if (month == 11) {
+          return 0;
+        }else {
+          return month + 1;
+        }
+      }
+
+      function showInfo(year, month, elem) {
+        elem.innerHTML = getMonthName(month) + ' ' + year;
+      }
+
+      function getMonthName(num) {
+        var monthes = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль',
+                      'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
+        return monthes[num];
+      }
+
+      function drawDates(year, month, dates, display, inputTask, table, span) {  //Должна отрисовать таблицу
+        var arr = [];
+        var firstDateOfMonth = 1;
+        var lastDateOfMonth = getLastDayOfMonth(year, month);
+
+        var unshiftElemsNum = getUnshiftElemsNum(year, month);
+        var pushElemsNum = getPushElemsNum(year, month);
+
+        arr = createArr(firstDateOfMonth, lastDateOfMonth);
+        arr = unshiftElems(unshiftElemsNum, '', arr);
+        arr = pushElems(pushElemsNum, '', arr);
+        arr = chunkArr(7, arr);
+
+        createTable(arr, dates, year, month, display, inputTask, table, span);
+
+      }
+      //[['', '', 1, 2, 3, 4, 5],[], [], []] Цифры - это дата, подмассивы это ряды,
+      function createTable(arr, parent, year, month, display, inputTask, table, span) {
+        parent.innerHTML = '';
+        for (var i = 0; i < arr.length; i++) {
+            var tr = document.createElement('tr');
+
+          for (var j = 0; j < arr[i].length; j++) {
+          var td = document.createElement('td');
+          td.innerHTML = arr[i][j];
+          tr.appendChild(td);
+          getCheckList(td, year, month, display, inputTask, table, span);
+          }
+          parent.appendChild(tr);
+        }
+      }
+
+      function getCheckList(td, year, month, display, inputTask, table, span) {
+        td.addEventListener('click', function () {
+          span.innerHTML = '';
+          table.innerHTML = '';
+
+          let textArr = [];
+          let checkArr = [];
+
+
+          var str ='saveText'+ td.innerHTML + month + year;
+          console.log(str);
+
+          textArr = getAll('saveText');
+          checkArr = getAll('checkText');
+
+
+
+          if (textArr == null && checkArr == null) {
+            textArr = [];
+            checkArr = [];
+          }
+          console.log(textArr);
+          console.log(checkArr);
+
+
+
+          addNewTask(year, month, display, inputTask, table, td, span, textArr, checkArr)
+});
+
+
+
+}
+
+          function addNewTask(year, month, display, inputTask, table, td, span, textArr, checkArr) {
+            display.style.display = 'block';
+            inputTask.style.display = 'block';
+            table.style.display = 'block';
+            span.style.display = 'block';
+            span.innerHTML = td.innerHTML + '.' + month + '.' + year;
+            inputTask.addEventListener('keyup', function() {
+              if (event.keyCode == 13) {
+                if (inputTask.value != '') {
+                  let tr = document.createElement('tr');
+                  let td = document.createElement('td');
+                  var chbox = document.createElement('input');
+                  chbox.type = 'checkbox';
+                  textArr.push(inputTask.value);
+                  checkArr.push(false);
+                  td.innerHTML = textArr[i];
+                  i++;
+                  inputTask.value = '';
+                  table.appendChild(tr);
+                  tr.insertBefore(chbox, tr.firstChild);
+                  tr.appendChild(td);
+                  deleteTask(table, tr, i, textArr, checkArr);
+                  pushSelectTask(checkArr, i, chbox, td, tr);
+
+                  saveAll('saveText'+ td.innerHTML + month + year, textArr);
+                  saveAll('checkText'+ td.innerHTML + month + year, checkArr);
+
+
+                  console.log(textArr);
+                  console.log(checkArr);
+
+              }
+            }
+          });
+
+          for (var i = 0; i < textArr.length; i++) {
+            let tr = document.createElement('tr');
+            let td = document.createElement('td');
+            var chbox = document.createElement('input');
+            chbox.type = 'checkbox';
+            table.appendChild(tr);
+            tr.insertBefore(chbox, tr.firstChild);
+            tr.appendChild(td);
+            td.innerHTML = textArr[i];
+            createTask(td, textArr, i);
+            deleteTask(table, tr, i, textArr, checkArr);
+            pushSelectTask(checkArr, i, chbox, td, tr);
+
+        }
+
+          }
+
+          function createTask(td, textArr, i) {
+            td.addEventListener('click',add);
+
+          function add(){
+            var text = this.innerHTML;
+            this.innerHTML = '';
+
+            var input = document.createElement('input');
+            input.value = text;
+            this.appendChild(input);
+
+            var self = this;
+            input.addEventListener('blur',function(){
+            self.innerHTML = this.value;
+            set(textArr, 'saveText', i, self.innerHTML);
+            console.log(get('saveText', i));
+            console.log(textArr);
+            self.addEventListener('click',add);
+            });
+            this.removeEventListener('click',add);
+              }
+          }
+
+          function pushSelectTask(checkArr, i, chbox, td, tr) {
+            chbox.addEventListener('click', function() {
+              if (chbox.checked == true) {
+                set(checkArr, 'checkText', i, true);
+              }
+            });
+            getStyleLine(checkArr, i, chbox, td);
+          }
+
+          function getStyleLine(checkArr, i, chbox, td) {
+            if (checkArr[i] == true) {
+              chbox.classList.add('complete');
+              td.classList.add('active');
+            }
+          }
+
+          function deleteTask(table, tr, i, textArr, checkArr) {
+            var td = document.createElement('td');
+            tr.appendChild(td);
+            var del = document.createElement('a');
+            del.href = "#";
+            del.innerHTML = "delete";
+            td.appendChild(del);
+
+            del.addEventListener('click', function() {
+              table.removeChild(tr);
+              textArr.splice(i, i);
+              checkArr.splice(i, i);
+             if (i == 0) {
+               textArr.shift();
+               checkArr.shift();
+              }
+            });
+          }
+
+
+
+
+
+          function saveAll (id, data) {
+            localStorage.setItem(id, JSON.stringify(data));
+
+          }
+
+          function getAll (id) {
+            let json = localStorage.getItem(id);
+            return JSON.parse(json);
+          }
+
+          function set (arr, id, key, newValue) {
+            arr[key] = newValue;
+            saveAll(id, arr);
+          }
+
+          function get (id, key) {
+            let arr = getAll(id);
+
+            if (arr[key] !== undefined) {
+              return arr[key];
+            }
+            return null;
+          }
+
+      function createArr(from, to) { // Откуда то нужно же брать массив
+          var arr = [];
+          for (var i = from; i <= to; i++) {
+            arr.push(i);
+          }
+          return arr;
+      }
+      function unshiftElems(num, elem, arr) {
+        for (var i = 0; i < num; i++) {
+          arr.unshift(elem);
+        }
+        return arr;
+      }
+
+      function pushElems(num, elem, arr) {
+        for (var i = 0; i < num; i++) {
+          arr.push(elem);
+        }
+        return arr;
+      }
+
+      function getLastDayOfMonth(year, month) {
+        var date = new Date(year, month+1, 0);
+        return date.getDate();
+      }
+
+      /*
+      function getLastDayOfMonth(year, month){
+          if(month == 1){
+              if(isLeap(year)){
+                return 29;
+              }else{
+                return 28;
+              }
+          }else{
+            var days = [31, undefined, 31, 30, 31, 31, 30, 31, 30, 31, 30, 31];
+              return days[month];
+          }
+      }
+      function isLeap(year){
+          if((year % 4 == 0 && year % 100 != 0) || year % 400 == 0){
+            return true;
+          }else {
+            return false;
+          }
+      }
+      */
+
+      function getUnshiftElemsNum(year, month) {
+        var jsDayNum = getFirstWeekDayOfMonthNum(year, month);
+
+        var realDayNum = getRealDayOfWeekNum(jsDayNum);
+
+        return realDayNum - 1;
+      }
+      function getPushElemsNum(year, month) {
+        var jsDayNum = getLastWeekDayOfMonthNum(year, month);
+
+        var realDayNum = getRealDayOfWeekNum(jsDayNum);
+
+        return 7 - realDayNum;
+      }
+      function chunkArr(num, arr) {
+        var result = [];
+        var chunk = [];
+        var iterCount = arr.length / num;
+
+        for (var i = 0; i < iterCount; i++) {
+          chunk = arr.splice(0, num);
+          result.push(chunk);
+        }
+        return result;
+
+      }
+      function getRealDayOfWeekNum(jsNumOfDay) {
+        if (jsNumOfDay == 0) {
+          return 7;
+        }else{
+          return jsNumOfDay;
+        }
+      }
+      function getFirstWeekDayOfMonthNum(year, month) {
+        var date = new Date(year, month, 1);
+        return date.getDay();
+      }
+      function getLastWeekDayOfMonthNum(year, month) {
+        var date = new Date(year, month + 1, 0);
+        return date.getDay();
+    }
+
+}('#calendar'));
+
+    </script>
+  </body>
+
+</html>
